@@ -8,6 +8,7 @@ Python Timelapse Diagnostic Tool
 import subprocess
 import datetime
 import time
+import sys
 import os
 
 
@@ -15,16 +16,48 @@ class DiagnosticClient(object):
 
     def __init__(self, picture_interval=None):
         
+        if not 'diagnose' in sys.argv[0]:
+            self.return_error('Just run it without the python bit, I made it that way!')
+        
         if os.getuid() != 0:
-            print "You must run the diagnostic tool as root damnit!"
-            exit()
+            self.return_error('You must run the diagnostic tool as root damnit!')
 
         self.diagnostic_data = {}
 
         self.start_time = datetime.datetime.now()
-        self.picture_interval = datetime.timedelta(minutes=6)
+        
+        if len(sys.argv) > 1:
+            try:
+                self.picture_interval = int(sys.argv[1])
+            except:
+                self.return_error('Please enter a valid picture interval')
+        else:
+            self.picture_interval = 6
 
         self.uptime_data = {}
+
+    def writer(self):
+    
+        # Get the terminal looking all nice
+        sys.stdout.flush()
+        sys.stdout.write('\r')
+        height, width = os.popen('stty size', 'r').read().split()
+        # Output buffer flushed
+        
+        lines = [
+            # text, center
+            ('%s (%s x %s)' % (datetime.datetime.now(), width, height), True),
+        ]
+        for (text, centerise) in lines:
+            padding = 0
+            if centerise:
+                padding = (int(width) - len(text)) / 2
+            sys.stdout.write('%s%s\n' % ((padding * 'F'), text))
+        for i in range((int(height)-len(lines)-1)):
+            sys.stdout.write('\n')
+        
+        # Hold off for a bit
+        time.sleep(0.5)
 
     def run(self):
 
@@ -33,14 +66,11 @@ class DiagnosticClient(object):
         """
 
         while True:
-
             for attr in dir(self):
                 attr_obj = getattr(self, attr)
                 if attr.startswith('diagnose_') and callable(attr_obj):
                     attr_obj()
-
-            print self.diagnostic_data, self.uptime_data
-
+                self.writer()
             time.sleep(1)
 
     def _percentage_between_timedeltas(self, td1, td2):
