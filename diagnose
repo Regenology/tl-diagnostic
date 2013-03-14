@@ -33,7 +33,7 @@ class DiagnosticClient(object):
 
             print self.diagnostic_data
 
-            time.sleep(1)
+            time.sleep(0.5)
 
     def file_contents(self, filepath):
         """
