@@ -14,6 +14,11 @@ import os
 class DiagnosticClient(object):
 
     def __init__(self, picture_interval=None):
+        
+        if os.getuid() != 0:
+            print "You must run the diagnostic tool as root damnit!"
+            exit()
+
         self.diagnostic_data = {}
 
         self.start_time = datetime.datetime.now()
