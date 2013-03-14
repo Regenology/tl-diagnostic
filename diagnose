@@ -16,6 +16,7 @@ class DiagnosticClient(object):
         self.diagnostic_data = {}
         
         # The longest expected time between pictures
+        self.start_time = datetime.datetime.now()
         self.picture_interval = datetime.timedelta(minutes=6)
 
     def run(self):
@@ -59,15 +60,37 @@ class DiagnosticClient(object):
         return ''
 
     def diagnose_camera_connectivity(self):
+
         """
         Checks the camera connection to ensure it's still there.
         """
+
         output = self.cmd(['/usr/bin/lsusb'])
         if 'Canon, Inc.' in output:
             connected = True
         else:
             connected = False
+
+        camera_check_datetime = datetime.datetime.now()
         self.diagnostic_data['camera_connected'] = connected
+        self.diagnostic_data['camera_check_duration'] = \
+            camera_check_datetime - self.start_time
+        if 'last_camera_check' in self.diagnostic_data:
+            if connected:
+                if not 'camera_uptime' in self.diagnostic_data:
+                    self.diagnostic_data['camera_uptime'] = \
+                        datetime.timedelta()
+                self.diagnostic_data['camera_uptime'] += \
+                    camera_check_datetime - \
+                    self.diagnostic_data['last_camera_check']
+            else:
+                if not 'camera_downtime' in self.diagnostic_data:
+                    self.diagnostic_data['camera_downtime'] = \
+                        datetime.timedelta()
+                self.diagnostic_data['camera_downtime'] += \
+                    camera_check_datetime - \
+                    self.diagnostic_data['last_camera_check']
+        self.diagnostic_data['last_camera_check'] = camera_check_datetime
 
     def diagnose_gphoto_process(self):
         """
