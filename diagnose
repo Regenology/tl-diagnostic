@@ -62,10 +62,9 @@ class DiagnosticClient(object):
         """
         Checks the camera connection to ensure it's still there.
         """
-        if 'Canon, Inc.' in self.cmd(['lsusb']):
+        if 'Canon, Inc.' in self.cmd(['/usr/bin/lsusb']):
             connected = True
         else:
-            print self.cmd(['lsusb'])
             connected = False
         self.diagnostic_data['camera_connected'] = connected
 
