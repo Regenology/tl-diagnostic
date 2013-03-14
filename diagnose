@@ -52,7 +52,9 @@ class DiagnosticClient(object):
         self.uptime_data = {}
 
     def _td(self, timedelta):
-        return str(timedelta)
+        new_delta = datetime.timedelta(
+            days=timedelta.days, seconds=timedelta.seconds)
+        return str(new_delta)
 
     def _b(self, boolean, true='Yes', false='No'):
         if boolean:
