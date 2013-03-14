@@ -86,8 +86,9 @@ class DiagnosticClient(object):
             progress_bar_padding = 26
             progress_bar_width = int(width) - progress_bar_padding
             reliability_percent = ud.get(key, {}).get('uptime_percent', 0)
-            bar_width = progress_bar_width * (float(reliability_percent) / 100)
-            progress_bar_string = int(bar_width) * '|'
+            bar_width = int(
+                progress_bar_width * (float(reliability_percent) / 100))
+            progress_bar_string = bar_width * '|'
             progress_bar_string += (progress_bar_width - bar_width) * '-'
 
             reliability_uptime = ud.get(key, {}).get(
