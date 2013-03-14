@@ -33,6 +33,8 @@ class DiagnosticClient(object):
 
             print self.diagnostic_data
 
+            time.sleep(1)
+
     def file_contents(self, filepath):
         """
         Returns the contents of a file as a string.
