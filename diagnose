@@ -8,6 +8,7 @@ Python Timelapse Diagnostic Tool
 import subprocess
 import datetime
 import time
+import os
 
 
 class DiagnosticClient(object):
@@ -125,8 +126,7 @@ class DiagnosticClient(object):
             connected = False
 
         self.diagnostic_data['camera_connected'] = connected
-
-        self.report_uptime('camera', connected)
+        self.report_uptime('camera_connected', connected)
 
     def diagnose_gphoto_process(self):
         """
@@ -140,14 +140,30 @@ class DiagnosticClient(object):
             running = False
 
         self.diagnostic_data['gphoto_running'] = running
-
-        self.report_uptime('gphoto', running)
+        self.report_uptime('gphoto_running', running)
 
     def diagnose_storage(self):
         """
         Checks the HDD is mounted and /home/cam1/ is writable.
         """
-        pass
+        
+        # Check mount point
+        
+        output = self.cmd(['/bin/mount'])
+        if '/dev/sda1 on /home/cam1' in output:
+            mounted = True
+        else:
+            mounted = False
+
+        self.diagnostic_data['hdd_mounted'] = mounted
+        self.report_uptime('hdd_mounted', mounted)
+        
+        # Check writability
+
+        writable = os.access('/home/cam1', os.W_OK)
+
+        self.diagnostic_data['cam_dir_writable'] = writable
+        self.report_uptime('cam_dir_writable', writable)
 
     def diagnose_pictures(self):
         """
