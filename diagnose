@@ -142,7 +142,7 @@ class DiagnosticClient(object):
                 attr_obj = getattr(self, attr)
                 if attr.startswith('diagnose_') and callable(attr_obj):
                     attr_obj()
-                self.writer()
+            self.writer()
             time.sleep(1)
 
     def _percentage_between_timedeltas(self, td1, td2):
