@@ -53,7 +53,7 @@ class DiagnosticClient(object):
         Runs a command nice and easily.
         """
         try:
-            return subprocess.check_output(command_args).read()
+            return subprocess.check_output(command_args)
         except Exception, e:
             print e
         return ''
