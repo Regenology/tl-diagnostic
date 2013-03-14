@@ -61,78 +61,99 @@ class DiagnosticClient(object):
             return true
         return false
 
+    def addstr(self, stdscr, *args, **kwargs):
+        try:
+            stdscr.addstr(*args, **kwargs)
+        except:
+            pass
+
     def writer(self):
     
-        stdscr = curses.initscr()
-        dd = self.diagnostic_data
-        ud = self.uptime_data
+        try:
     
-        # Get the terminal looking all nice
-        height, width = os.popen('stty size', 'r').read().split()
-        # Output buffer flushed
+            stdscr = curses.initscr()
+            dd = self.diagnostic_data
+            ud = self.uptime_data
         
-        lines = [
-            '',
-            'Timelapse Diagnostic Tool',
-            datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'),
-            '',
-            '',
-            '',
-        ]
-        center_lines = [1, 2]
-
-        for key, description in self.diagnostic_keys.items():
-
-            progress_bar_padding = 26
-            progress_bar_width = int(width) - progress_bar_padding
-            reliability_percent = ud.get(key, {}).get('uptime_percent', 0)
-            bar_width = int(
-                progress_bar_width * (float(reliability_percent) / 100))
-            progress_bar_string = bar_width * '|'
-            progress_bar_string += (progress_bar_width - bar_width) * '-'
-
-            reliability_uptime = ud.get(key, {}).get(
-                'uptime', datetime.timedelta())
-            reliability_downtime = ud.get(key, {}).get(
-                'downtime', datetime.timedelta())
-
-            new_lines = [
-                '   %s: %s' % (description, self._b(dd.get(key, False))),
+            # Get the terminal looking all nice
+            height, width = os.popen('stty size', 'r').read().split()
+            # Output buffer flushed
+            
+            lines = [
                 '',
-                '   Reliable for: %s (unreliable for %s)' % (
-                    self._td(reliability_uptime),
-                    self._td(reliability_downtime)),
-                '   Reliability [%s] %s%%' % (
-                    progress_bar_string, reliability_percent),
-                '', '',
+                'Timelapse Diagnostic Tool',
+                datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'),
+                '',
+                '',
+                '',
             ]
-            lines += new_lines
-
-        ii = 0
-        for text in lines:
-            padding = 0
-            if ii in center_lines:
-                padding = (int(width) - len(text)) / 2
-            stdscr.addstr(ii, 0, '%s%s\n' % ((padding * ' '), text))
-            ii += 1
-        
-        init_top = 6
-        init_left = 3
-        i = 0
-        for key, description in self.diagnostic_keys.items():
-            top = init_top + (i * 6)
-            left = init_left
-            stdscr.addstr(top, left + len(description) + 2, self._b(dd.get(key, False)), curses.A_BOLD)
-            i += 1
-        
-        for i in range((int(height)-len(lines)-1)):
-            stdscr.addstr(i+ii, 0, '\n')
-            pass
-        
-        stdscr.refresh()
-        
-        # Hold off for a bit
-        time.sleep(0.5)
+            center_lines = [1, 2]
+    
+            for key, description in self.diagnostic_keys.items():
+    
+                progress_bar_padding = 26
+                progress_bar_width = int(width) - progress_bar_padding
+                udk = ud.get(key, {})
+                reliability_percent = udk.get('uptime_percent', 0)
+                bar_width = int(
+                    progress_bar_width * (float(reliability_percent) / 100))
+                progress_bar_string = bar_width * '|'
+                progress_bar_string += (progress_bar_width - bar_width) * ' '
+    
+                reliability_uptime = udk.get('uptime', datetime.timedelta())
+                reliability_downtime = udk.get(
+                    'downtime', datetime.timedelta())
+    
+                new_lines = [
+                    '   %s: %s' % (description, self._b(dd.get(key, False))),
+                    '',
+                    '   Reliable for: %s (unreliable for %s)' % (
+                        self._td(reliability_uptime),
+                        self._td(reliability_downtime)),
+                    '   Reliability [%s] %s%%' % (
+                        progress_bar_string, reliability_percent),
+                    '', '',
+                ]
+                lines += new_lines
+    
+            lines += [
+                '',
+                '   Diagnostic duration: %s' % self._td(
+                    udk.get('duration', datetime.timedelta())),
+                '   Overall system reliability: %s%%' % ud.get(
+                    'overall_uptime_percent', 0),
+            ]
+    
+            ii = 0
+            for text in lines:
+                padding = 0
+                if ii in center_lines:
+                    padding = (int(width) - len(text)) / 2
+                self.addstr(stdscr, ii, 0, '%s%s\n' % ((padding * ' '), text))
+                ii += 1
+            
+            init_top = 6
+            init_left = 3
+            i = 0
+            for key, description in self.diagnostic_keys.items():
+                top = init_top + (i * 6)
+                left = init_left
+                self.addstr(
+                    stdscr, top, left + len(description) + 2,
+                    self._b(dd.get(key, False)), curses.A_BOLD)
+                i += 1
+            
+            for i in range((int(height)-len(lines)-1)):
+                self.addstr(stdscr, i+ii, 0, '\n')
+                pass
+            
+            stdscr.refresh()
+            
+            # Hold off for a bit
+            time.sleep(0.5)
+            
+        except Exception, e:
+            print e
 
     def run(self):
 
@@ -197,6 +218,15 @@ class DiagnosticClient(object):
                         self.uptime_data[identifier]['duration'])
             else:
                 self.uptime_data[identifier]['downtime_percent'] = 0
+
+            uptime_total = 0
+            i = 1
+            for key, val in self.uptime_data.items():
+                if isinstance(val, dict):
+                    uptime_total += val.get('uptime_percent', 0)
+                    i += 1
+            self.uptime_data['overall_uptime_percent'] = (
+                uptime_total / (100 * i) * 100)
 
         self.uptime_data[identifier]['last_check'] = now
 
