@@ -54,30 +54,39 @@ class DiagnosticClient(object):
             self.uptime_data[identifier] = {}
 
         if 'last_check' in self.uptime_data[identifier]:
+
             if not 'duration' in self.uptime_data[identifier]:
                 self.uptime_data[identifier]['duration'] = datetime.timedelta()
             self.uptime_data[identifier]['duration'] += \
                 now - self.uptime_data[identifier]['last_check']
+
             if up:
                 if not 'uptime' in self.uptime_data[identifier]:
                     self.uptime_data[identifier]['uptime'] = \
                         datetime.timedelta()
                 self.uptime_data[identifier]['uptime'] += \
                     now - self.uptime_data[identifier]['last_check']
-                self.uptime_data[identifier]['uptime_percent'] = \
-                    self._percentage_between_timedeltas(
-                        self.uptime_data[identifier]['uptime'],
-                        self.uptime_data[identifier]['duration'])
             else:
                 if not 'downtime' in self.uptime_data[identifier]:
                     self.uptime_data[identifier]['downtime'] = \
                         datetime.timedelta()
                 self.uptime_data[identifier]['downtime'] += \
                     now - self.uptime_data[identifier]['last_check']
+
+            if 'uptime' in self.uptime_data[identifier]:
+                self.uptime_data[identifier]['uptime_percent'] = \
+                        self._percentage_between_timedeltas(
+                            self.uptime_data[identifier]['uptime'],
+                            self.uptime_data[identifier]['duration'])
+            else:
+                self.uptime_data[identifier]['uptime_percent'] = 0
+            if 'downtime' in self.uptime_data[identifier]:
                 self.uptime_data[identifier]['downtime_percent'] = \
                     self._percentage_between_timedeltas(
                         self.uptime_data[identifier]['downtime'],
                         self.uptime_data[identifier]['duration'])
+            else:
+                self.uptime_data[identifier]['downtime_percent'] = 0
 
         self.uptime_data[identifier]['last_check'] = now
 
