@@ -64,7 +64,7 @@ class DiagnosticClient(object):
                         self.uptime_data[identifier]['uptime'],
                         self.uptime_data[identifier]['duration'])
             else:
-                if not 'uptime' in self.uptime_data[identifier]:
+                if not 'downtime' in self.uptime_data[identifier]:
                     self.uptime_data[identifier]['downtime'] = \
                         datetime.timedelta()
                 self.uptime_data[identifier]['downtime'] += \
