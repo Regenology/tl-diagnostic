@@ -14,10 +14,11 @@ class DiagnosticClient(object):
 
     def __init__(self, picture_interval=None):
         self.diagnostic_data = {}
-        
-        # The longest expected time between pictures
+
         self.start_time = datetime.datetime.now()
         self.picture_interval = datetime.timedelta(minutes=6)
+
+        self.uptime_data = {}
 
     def run(self):
 
@@ -32,9 +33,50 @@ class DiagnosticClient(object):
                 if attr.startswith('diagnose_') and callable(attr_obj):
                     attr_obj()
 
-            print self.diagnostic_data
+            print self.diagnostic_data, self.uptime_data
 
             time.sleep(1)
+
+    def _percentage_between_timedeltas(self, td1, td2):
+        return int((float(td1.total_seconds()) / td1.total_seconds()) * 100)
+    
+
+    def report_uptime(self, identifier, up):
+
+        """
+        Makes light work of logging up/down times.
+        """
+
+        now = datetime.datetime.now()
+
+        if not identifier in self.uptime_data:
+            self.uptime_data[identifier] = {}
+
+        if 'last_check' in self.uptime_data[identifier]:
+            if up:
+                if not 'uptime' in self.uptime_data[identifier]:
+                    self.uptime_data[identifier]['uptime'] = \
+                        datetime.timedelta()
+                self.uptime_data[identifier]['uptime'] += \
+                    now - self.uptime_data[identifier]['last_check']
+                self.uptime_data[identifier]['uptime_percent'] = \
+                    self._percentage_between_timedeltas(
+                        self.uptime_data[identifier]['uptime'],
+                        self.uptime_data[identifier]['duration'])
+            else:
+                if not 'uptime' in self.uptime_data[identifier]:
+                    self.uptime_data[identifier]['downtime'] = \
+                        datetime.timedelta()
+                self.uptime_data[identifier]['downtime'] += \
+                    now - self.uptime_data[identifier]['last_check']
+                self.uptime_data[identifier]['downtime_percent'] = \
+                    self._percentage_between_timedeltas(
+                        self.uptime_data[identifier]['downtime'],
+                        self.uptime_data[identifier]['duration'])
+
+        self.uptime_data[identifier]['last_check'] = now
+        self.uptime_data[identifier]['duration'] = \
+            now - self.start_time
 
     def file_contents(self, filepath):
         """
@@ -71,26 +113,9 @@ class DiagnosticClient(object):
         else:
             connected = False
 
-        camera_check_datetime = datetime.datetime.now()
         self.diagnostic_data['camera_connected'] = connected
-        self.diagnostic_data['camera_check_duration'] = \
-            camera_check_datetime - self.start_time
-        if 'last_camera_check' in self.diagnostic_data:
-            if connected:
-                if not 'camera_uptime' in self.diagnostic_data:
-                    self.diagnostic_data['camera_uptime'] = \
-                        datetime.timedelta()
-                self.diagnostic_data['camera_uptime'] += \
-                    camera_check_datetime - \
-                    self.diagnostic_data['last_camera_check']
-            else:
-                if not 'camera_downtime' in self.diagnostic_data:
-                    self.diagnostic_data['camera_downtime'] = \
-                        datetime.timedelta()
-                self.diagnostic_data['camera_downtime'] += \
-                    camera_check_datetime - \
-                    self.diagnostic_data['last_camera_check']
-        self.diagnostic_data['last_camera_check'] = camera_check_datetime
+
+        self.report_uptime('camera', connected)
 
     def diagnose_gphoto_process(self):
         """
