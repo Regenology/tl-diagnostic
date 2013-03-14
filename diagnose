@@ -48,7 +48,6 @@ class DiagnosticClient(object):
         if int(td2.total_seconds()) == 0:
             return 100
         return int((int(td1.total_seconds()) / int(td2.total_seconds())) * 100)
-    
 
     def report_uptime(self, identifier, up):
 
@@ -62,8 +61,10 @@ class DiagnosticClient(object):
             self.uptime_data[identifier] = {}
 
         if 'last_check' in self.uptime_data[identifier]:
-            self.uptime_data[identifier]['duration'] = \
-                self.uptime_data[identifier]['last_check'] - self.start_time
+            if not 'duration' in self.uptime_data[identifier]:
+                self.uptime_data[identifier]['duration'] = datetime.timedelta()
+            self.uptime_data[identifier]['duration'] += \
+                now - self.uptime_data[identifier]['last_check']
             if up:
                 if not 'uptime' in self.uptime_data[identifier]:
                     self.uptime_data[identifier]['uptime'] = \
