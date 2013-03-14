@@ -38,8 +38,7 @@ class DiagnosticClient(object):
             time.sleep(1)
 
     def _percentage_between_timedeltas(self, td1, td2):
-        #print td1.total_seconds(), td2.total_seconds()
-        #print "PERC: %s" % (td1.total_seconds() / td2.total_seconds())
+        # NOTE: Maybe remove rounding
         return int((td1.total_seconds() / td2.total_seconds()) * 100)
 
     def report_uptime(self, identifier, up):
@@ -133,7 +132,16 @@ class DiagnosticClient(object):
         """
         Checks if Gphoto is still running.
         """
-        pass
+
+        output = self.cmd(['/bin/ps', 'aux'])
+        if 'gphoto2 --port=usb' in output:
+            running = True
+        else:
+            running = False
+
+        self.diagnostic_data['gphoto_running'] = running
+
+        self.report_uptime('gphoto', running)
 
     def diagnose_storage(self):
         """
