@@ -153,7 +153,7 @@ class DiagnosticClient(object):
             time.sleep(0.5)
             
         except Exception, e:
-            print e
+            pass
 
     def run(self):
 
@@ -226,7 +226,7 @@ class DiagnosticClient(object):
                     uptime_total += val.get('uptime_percent', 0)
                     i += 1
             self.uptime_data['overall_uptime_percent'] = (
-                uptime_total)
+                uptime_total / i)
 
         self.uptime_data[identifier]['last_check'] = now
 
