@@ -26,13 +26,10 @@ class DiagnosticClient(object):
 
         while True:
 
-            try:
-                for attr in dir(self):
-                    attr_obj = getattr(self, attr)
-                    if attr.startswith('diagnose_') and callable(attr_obj):
-                        attr_obj()
-            except KeyboardInterrupt:
-                exit()
+            for attr in dir(self):
+                attr_obj = getattr(self, attr)
+                if attr.startswith('diagnose_') and callable(attr_obj):
+                    attr_obj()
 
             print self.diagnostic_data
 
