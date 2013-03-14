@@ -44,7 +44,7 @@ class DiagnosticClient(object):
             contents = f.read()
             f.close()
             return contents
-        except:
+        except Exception, e:
             pass
         return ''
     
@@ -55,7 +55,7 @@ class DiagnosticClient(object):
         try:
             return subprocess.check_output(command_args)
         except Exception, e:
-            print e
+            pass
         return ''
 
     def diagnose_camera_connectivity(self):
@@ -63,7 +63,6 @@ class DiagnosticClient(object):
         Checks the camera connection to ensure it's still there.
         """
         output = self.cmd(['/usr/bin/lsusb'])
-        print output
         if 'Canon, Inc.' in output:
             connected = True
         else:
