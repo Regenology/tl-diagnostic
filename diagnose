@@ -38,7 +38,7 @@ class DiagnosticClient(object):
             time.sleep(1)
 
     def _percentage_between_timedeltas(self, td1, td2):
-        return int((float(td1.total_seconds()) / td1.total_seconds()) * 100)
+        return int((float(td1.total_seconds()) / td2.total_seconds()) * 100)
     
 
     def report_uptime(self, identifier, up):
