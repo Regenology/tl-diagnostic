@@ -37,13 +37,7 @@ class DiagnosticClient(object):
 
             time.sleep(1)
 
-    def __timedelta_less_microseconds(self, delta):
-        return datetime.timedelta(
-            days=delta.days, seconds=delta.seconds)
-
     def _percentage_between_timedeltas(self, td1, td2):
-        td1 = self.__timedelta_less_microseconds(td1)
-        td2 = self.__timedelta_less_microseconds(td2)
         print td1, td2
         if int(td2.total_seconds()) == 0:
             print "PERC (fb): %s" % 100
