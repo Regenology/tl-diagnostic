@@ -37,8 +37,17 @@ class DiagnosticClient(object):
 
             time.sleep(1)
 
+    def __timedelta_less_microseconds(self, delta):
+        return datetime.timedelta(
+            days=delta.days, seconds=delta.seconds)
+
     def _percentage_between_timedeltas(self, td1, td2):
-        return int((float(td1.total_seconds()) / td2.total_seconds()) * 100)
+        td1 = self.__timedelta_less_microseconds(td1)
+        td2 = self.__timedelta_less_microseconds(td2)
+        print td1, td2
+        if int(td2.total_seconds()) == 0:
+            return 100
+        return int((int(td1.total_seconds()) / int(td2.total_seconds())) * 100)
     
 
     def report_uptime(self, identifier, up):
@@ -53,6 +62,8 @@ class DiagnosticClient(object):
             self.uptime_data[identifier] = {}
 
         if 'last_check' in self.uptime_data[identifier]:
+            self.uptime_data[identifier]['duration'] = \
+                self.uptime_data[identifier]['last_check'] - self.start_time
             if up:
                 if not 'uptime' in self.uptime_data[identifier]:
                     self.uptime_data[identifier]['uptime'] = \
@@ -75,8 +86,6 @@ class DiagnosticClient(object):
                         self.uptime_data[identifier]['duration'])
 
         self.uptime_data[identifier]['last_check'] = now
-        self.uptime_data[identifier]['duration'] = \
-            now - self.start_time
 
     def file_contents(self, filepath):
         """
