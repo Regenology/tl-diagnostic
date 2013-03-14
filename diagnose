@@ -46,7 +46,7 @@ class DiagnosticClient(object):
         td2 = self.__timedelta_less_microseconds(td2)
         print td1, td2
         if int(td2.total_seconds()) == 0:
-            print "PERC: %s" % 100
+            print "PERC (fb): %s" % 100
             return 100
         print "PERC: %s" % int((int(td1.total_seconds()) / int(td2.total_seconds())) * 100)
         return int((int(td1.total_seconds()) / int(td2.total_seconds())) * 100)
