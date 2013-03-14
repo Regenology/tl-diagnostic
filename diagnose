@@ -30,6 +30,13 @@ class DiagnosticClient(object):
         if os.getuid() != 0:
             self.return_error('You must run the diagnostic tool as root damnit!')
 
+        self.diagnostic_keys = {
+            'camera_connected': 'Camera connected',
+            'gphoto_running': 'gPhoto running',
+            'hdd_mounted': 'External drive mounted',
+            'cam_dir_writable': 'Camera directory writable',
+            'recent_pictures': 'Up-to-date pictures',
+        }
         self.diagnostic_data = {}
 
         self.start_time = datetime.datetime.now()
@@ -44,9 +51,19 @@ class DiagnosticClient(object):
 
         self.uptime_data = {}
 
+    def _td(self, timedelta):
+        return str(timedelta)
+
+    def _b(self, boolean, true='Yes', false='No'):
+        if boolean:
+            return true
+        return false
+
     def writer(self):
     
         stdscr = curses.initscr()
+        dd = self.diagnostic_data
+        ud = self.uptime_data
     
         # Get the terminal looking all nice
         height, width = os.popen('stty size', 'r').read().split()
@@ -56,9 +73,38 @@ class DiagnosticClient(object):
             '',
             'Timelapse Diagnostic Tool',
             datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'),
-            'dfg',
+            '',
+            '',
+            '',
         ]
         center_lines = [1, 2]
+
+        for key, description in self.diagnostic_keys.items():
+
+            progress_bar_padding = 26
+            progress_bar_width = int(width) - progress_bar_padding
+            reliability_percent = ud.get(key, {}).get('uptime_percent', 0)
+            bar_width = progress_bar_width * (reliability_percent / 100)
+            progress_bar_string = bar_width * '|'
+            progress_bar_string += (progress_bar_width - bar_width) * '-'
+
+            reliability_uptime = ud.get(key, {}).get(
+                'uptime', datetime.timedelta())
+            reliability_downtime = ud.get(key, {}).get(
+                'downtime', datetime.timedelta())
+
+            new_lines = [
+                '   %s: %s' % (description, self._b(dd.get(key, False))),
+                '',
+                '   Reliable for: %s (unreliable for %s)' % (
+                    self._td(reliability_uptime),
+                    self._td(reliability_downtime)),
+                '   Reliability [%s] %s%%' % (
+                    progress_bar_string, reliability_percent),
+                '', '',
+            ]
+            lines += new_lines
+
         ii = 0
         for text in lines:
             padding = 0
@@ -66,8 +112,18 @@ class DiagnosticClient(object):
                 padding = (int(width) - len(text)) / 2
             stdscr.addstr(ii, 0, '%s%s\n' % ((padding * ' '), text))
             ii += 1
+        
+        init_top = 6
+        init_left = 3
+        i = 0
+        for key, description in self.diagnostic_keys.items():
+            top = init_top + (i * 6)
+            left = init_left
+            stdscr.addstr(top, left + len(description) + 2, self._b(dd.get(key, False)), curses.A_BOLD)
+            i += 1
+        
         for i in range((int(height)-len(lines)-1)):
-            stdscr.addstr(i+ii, 0, 'd\n')
+            stdscr.addstr(i+ii, 0, '\n')
             pass
         
         stdscr.refresh()
@@ -221,16 +277,20 @@ class DiagnosticClient(object):
         Checks last picture taken.
         """
         
-        output = self.cmd([
-            '/usr/bin/find', '/home/cam1/', '-maxdepth', '1', '-cmin',
-            '-%s' % self.picture_interval, '-name', '*.jpg'])
-        if output:
-            up_to_date_pictures = True
+        if os.path.exists('/home/cam1/'):
+            output = self.cmd([
+                '/usr/bin/find', '/home/cam1/', '-maxdepth', '1', '-cmin',
+                '-%s' % self.picture_interval, '-name', '*.jpg'])
         else:
-            up_to_date_pictures = False
+            output = ''
 
-        self.diagnostic_data['up_to_date_pictures'] = up_to_date_pictures
-        self.report_uptime('up_to_date_pictures', up_to_date_pictures)
+        if output:
+            recent_pictures = True
+        else:
+            recent_pictures = False
+
+        self.diagnostic_data['recent_pictures'] = recent_pictures
+        self.report_uptime('recent_pictures', recent_pictures)
 
 
 if __name__ == '__main__':
