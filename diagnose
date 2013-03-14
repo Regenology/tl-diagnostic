@@ -68,6 +68,7 @@ class DiagnosticClient(object):
         if 'Canon, Inc.' in self.cmd(['lsusb']):
             connected = True
         else:
+            print self.cmd(['lsusb'])
             connected = False
         self.diagnostic_data['camera_connected'] = connected
 
