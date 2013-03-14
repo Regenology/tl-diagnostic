@@ -38,12 +38,9 @@ class DiagnosticClient(object):
             time.sleep(1)
 
     def _percentage_between_timedeltas(self, td1, td2):
-        print td1, td2
-        if int(td2.total_seconds()) == 0:
-            print "PERC (fb): %s" % 100
-            return 100
-        print "PERC: %s" % int((int(td1.total_seconds()) / int(td2.total_seconds())) * 100)
-        return int((int(td1.total_seconds()) / int(td2.total_seconds())) * 100)
+        #print td1.total_seconds(), td2.total_seconds()
+        #print "PERC: %s" % (td1.total_seconds() / td2.total_seconds())
+        return int((td1.total_seconds() / td2.total_seconds()) * 100)
 
     def report_uptime(self, identifier, up):
 
