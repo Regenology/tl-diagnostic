@@ -7,9 +7,17 @@ Python Timelapse Diagnostic Tool
 
 import subprocess
 import datetime
+import signal
+import curses
 import time
 import sys
 import os
+
+
+def close_handler(*args, **kwargs):
+    curses.endwin()
+    exit(0)
+signal.signal(signal.SIGINT, close_handler)
 
 
 class DiagnosticClient(object):
@@ -38,23 +46,31 @@ class DiagnosticClient(object):
 
     def writer(self):
     
+        stdscr = curses.initscr()
+    
         # Get the terminal looking all nice
-        sys.stdout.flush()
-        sys.stdout.write('\r')
         height, width = os.popen('stty size', 'r').read().split()
         # Output buffer flushed
         
         lines = [
-            # text, center
-            ('%s (%s x %s)' % (datetime.datetime.now(), width, height), True),
+            '',
+            'Timelapse Diagnostic Tool',
+            datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'),
+            'dfg',
         ]
-        for (text, centerise) in lines:
+        center_lines = [1, 2]
+        ii = 0
+        for text in lines:
             padding = 0
-            if centerise:
+            if ii in center_lines:
                 padding = (int(width) - len(text)) / 2
-            sys.stdout.write('%s%s\n' % ((padding * 'F'), text))
+            stdscr.addstr(ii, 0, '%s%s\n' % ((padding * ' '), text))
+            ii += 1
         for i in range((int(height)-len(lines)-1)):
-            sys.stdout.write('\n')
+            stdscr.addstr(i+ii, 0, 'd\n')
+            pass
+        
+        stdscr.refresh()
         
         # Hold off for a bit
         time.sleep(0.5)
@@ -204,7 +220,17 @@ class DiagnosticClient(object):
         """
         Checks last picture taken.
         """
-        pass
+        
+        output = self.cmd([
+            '/usr/bin/find', '/home/cam1/', '-maxdepth', '1', '-cmin',
+            '-%s' % self.picture_interval, '-name', '*.jpg'])
+        if output:
+            up_to_date_pictures = True
+        else:
+            up_to_date_pictures = False
+
+        self.diagnostic_data['up_to_date_pictures'] = up_to_date_pictures
+        self.report_uptime('up_to_date_pictures', up_to_date_pictures)
 
 
 if __name__ == '__main__':
