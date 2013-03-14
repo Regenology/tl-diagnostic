@@ -1,1 +1,95 @@
 #!/usr/bin/python
+
+"""
+Python Timelapse Diagnostic Tool
+"""
+
+
+import subprocess
+import datetime
+import time
+
+
+class DiagnosticClient(object):
+
+    def __init__(self, picture_interval=None):
+        self.diagnostic_data = {}
+        
+        # The longest expected time between pictures
+        self.picture_interval = datetime.timedelta(minutes=6)
+
+    def run(self):
+
+        """
+        Iterates and executes all 'diagnose_' methods belonging to instance.
+        """
+
+        while True:
+
+            try:
+                for attr in dir(self):
+                    attr_obj = getattr(self, attr)
+                    if attr.startswith('diagnose_') and callable(attr_obj):
+                        attr_obj()
+            except KeyboardInterrupt:
+                exit()
+
+            print self.diagnostic_data
+
+            time.sleep(1)
+
+    def file_contents(self, filepath):
+        """
+        Returns the contents of a file as a string.
+        """
+        try:
+            f = open(filepath, 'r')
+            contents = f.read()
+            f.close()
+            return contents
+        except:
+            pass
+        return ''
+    
+    def cmd(self, command_args):
+        """
+        Runs a command nice and easily.
+        """
+        try:
+            return subprocess.check_output(command_args).read()
+        except:
+            pass
+        return ''
+
+    def diagnose_camera_connectivity(self):
+        """
+        Checks the camera connection to ensure it's still there.
+        """
+        if 'Canon, Inc.' in self.cmd(['lsusb']):
+            connected = True
+        else:
+            connected = False
+        self.diagnostic_data['camera_connected'] = connected
+
+    def diagnose_gphoto_process(self):
+        """
+        Checks if Gphoto is still running.
+        """
+        pass
+
+    def diagnose_storage(self):
+        """
+        Checks the HDD is mounted and /home/cam1/ is writable.
+        """
+        pass
+
+    def diagnose_pictures(self):
+        """
+        Checks last picture taken.
+        """
+        pass
+
+
+if __name__ == '__main__':
+    diagnostic = DiagnosticClient()
+    diagnostic.run()
